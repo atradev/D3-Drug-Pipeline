@@ -43,10 +43,10 @@
 
       //Chart settings
       var width = 860,
-          height = 500;
+          height = 1000;
 
       var barHeight = 45;
-      var yMargin = 20;
+      var yMargin = 60;
 
       var x = d3.scale.ordinal()
           .rangeRoundBands([0, width], .1);
@@ -130,7 +130,7 @@
         bar.append("rect")
             .attr("y", height/2)
             .attr("height", function(d) { 
-              return _.max([30,_.min([barHeight, height / groupedData[d.Phase].length - yMargin])]); 
+              return _.max([35,_.min([barHeight, height / groupedData[d.Phase].length - yMargin])]); 
             })
             .attr("width", x.rangeBand())
             .attr("class","inactive")
