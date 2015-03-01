@@ -46,7 +46,7 @@
           height = 500;
 
       var barHeight = 45;
-      var yMargin = 10;
+      var yMargin = 20;
 
       var x = d3.scale.ordinal()
           .rangeRoundBands([0, width], .1);
@@ -64,6 +64,17 @@
 
       //Read in the data and plot drugs by phase
       d3.csv("data/sample2.csv", function(error, data){
+
+        //Get just uniq data we care about:
+        var uniqElements = function(item) {
+          return item.Drug + item.Company + item.Phase + item.Route;
+        }
+        data = _.uniq(data, uniqElements);
+
+        //Also make sure we only deal with phases we know about
+        data = _.filter(data, function(d){
+          return _.contains(allPhases, d.Phase);
+        });
 
         //Format the data so it's grouped into Phases:
         var groupedData = _.groupBy(data, function(obj){
@@ -87,13 +98,16 @@
 
         var getYStackedRoute = function(d){
           var routeGroup = _.groupBy(groupedData[d.Phase], function(obj){ return obj.Route; });
-          var adjustedBarHeight = _.min([barHeight, height / groupedData[d.Phase].length - yMargin])
+          var adjustedBarHeight = _.min([barHeight, height / routeGroup[d.Route].length - yMargin])
 
           var topOrBot = d["Route"] == "Inhaled" ? -1/2 : 1/2;
           var PhaseIndex = _.findIndex(routeGroup[d.Route], {"Drug": d["Drug"]});
           //Adjust so 0s don't overlap
           PhaseIndex = topOrBot == 1/2 ? ++PhaseIndex : PhaseIndex;
-          var xAxisMargin = PhaseIndex % 2 == 0 ? 50 : -25; //Leave some room for X axis.
+          var xAxisMargin = topOrBot == -1/2 ? 50 : -25; //Leave some room for X axis.
+          if(d["Phase"] == 3) {
+            console.log(PhaseIndex + " " + d["Drug"] + " " + d.Route + " " + xAxisMargin);
+          }
           return topOrBot * (PhaseIndex * (adjustedBarHeight + yMargin)) - xAxisMargin;
         }
 
@@ -116,7 +130,7 @@
         bar.append("rect")
             .attr("y", height/2)
             .attr("height", function(d) { 
-              return _.min([barHeight, height / groupedData[d.Phase].length - yMargin]); 
+              return _.max([30,_.min([barHeight, height / groupedData[d.Phase].length - yMargin])]); 
             })
             .attr("width", x.rangeBand())
             .attr("class","inactive")
