@@ -39,7 +39,7 @@
     </div>
 
     <script>
-      var allPhases = ["Phase I","Phase II","Phase III","Filed","Launched"];
+      var allPhases = ["1", "2", "3", "3b", "4"];
 
       //Chart settings
       var width = 860,
@@ -63,31 +63,43 @@
           .attr("height", height);
 
       //Read in the data and plot drugs by phase
-      d3.csv("data/sample1.csv", function(error, data){
+      d3.csv("data/sample2.csv", function(error, data){
 
-        //Format the data so it's grouped into Stages:
+        //Format the data so it's grouped into Phases:
         var groupedData = _.groupBy(data, function(obj){
-          return obj.Stage;
+          return obj.Phase;
         });
 
-        var phasesPresent = _.intersection(allPhases, _.uniq(_.pluck(data, 'Stage')));
-        console.log(phasesPresent);
+
+        var phasesPresent = _.intersection(allPhases, _.uniq(_.pluck(data, 'Phase')));
 
         var getY = function(d, i){
-          return i * height / groupedData[d.Stage].length;
+          return i * height / groupedData[d.Phase].length;
         }
 
         var getYStacked = function(d){
-          var adjustedBarHeight = _.min([barHeight, height / groupedData[d.Stage].length - yMargin])
-          var stageIndex = _.findIndex(groupedData[d.Stage], {"Drug Name": d["Drug Name"]});
-          var topOrBot = stageIndex % 2 == 0 ? -1/2 : 1/2;
-          var xAxisMargin = stageIndex % 2 == 0 ? 50 : -25; //Leave some room for X axis.
-          return topOrBot * (stageIndex * (adjustedBarHeight + yMargin)) - xAxisMargin;
+          var adjustedBarHeight = _.min([barHeight, height / groupedData[d.Phase].length - yMargin])
+          var PhaseIndex = _.findIndex(groupedData[d.Phase], {"Drug": d["Drug"]});
+          var topOrBot = PhaseIndex % 2 == 0 ? -1/2 : 1/2;
+          var xAxisMargin = PhaseIndex % 2 == 0 ? 50 : -25; //Leave some room for X axis.
+          return topOrBot * (PhaseIndex * (adjustedBarHeight + yMargin)) - xAxisMargin;
+        }
+
+        var getYStackedRoute = function(d){
+          var routeGroup = _.groupBy(groupedData[d.Phase], function(obj){ return obj.Route; });
+          var adjustedBarHeight = _.min([barHeight, height / groupedData[d.Phase].length - yMargin])
+
+          var topOrBot = d["Route"] == "Inhaled" ? -1/2 : 1/2;
+          var PhaseIndex = _.findIndex(routeGroup[d.Route], {"Drug": d["Drug"]});
+          //Adjust so 0s don't overlap
+          PhaseIndex = topOrBot == 1/2 ? ++PhaseIndex : PhaseIndex;
+          var xAxisMargin = PhaseIndex % 2 == 0 ? 50 : -25; //Leave some room for X axis.
+          return topOrBot * (PhaseIndex * (adjustedBarHeight + yMargin)) - xAxisMargin;
         }
 
         //Set the domains of the scales
 
-        //x.domain(data.map(function(d) { return d.Stage; }));
+        //x.domain(data.map(function(d) { return d.Phase; }));
         x.domain(phasesPresent);
         y.domain([0, d3.max(data, function(d, i) { return getY(d, i); })]);
         
@@ -97,14 +109,14 @@
           .data(data)
         .enter().append("g")
           .attr("transform", function(d) { 
-            return "translate(" + x(d.Stage) + "," 
-              + getYStacked(d) + ")"; 
+            return "translate(" + x(d.Phase) + "," 
+              + getYStackedRoute(d) + ")"; //Replace back to getYStacked(d)
           });
         //Draw rect  
         bar.append("rect")
             .attr("y", height/2)
             .attr("height", function(d) { 
-              return _.min([barHeight, height / groupedData[d.Stage].length - yMargin]); 
+              return _.min([barHeight, height / groupedData[d.Phase].length - yMargin]); 
             })
             .attr("width", x.rangeBand())
             .attr("class","inactive")
@@ -120,14 +132,14 @@
             .attr("x", x.rangeBand() / 2)
             .attr("y", height/2 + 10)
             .attr("dy", ".75em")
-            .text(function(d) { return d["Drug Name"] });
+            .text(function(d) { return d["Drug"] });
 
         //Append drug company
         bar.append("text")
             .attr("x", x.rangeBand() / 2)
             .attr("y", height/2 + 20)
             .attr("dy", ".75em")
-            .text(function(d) { return "(" + d["Company Name"] + ")" });
+            .text(function(d) { return "(" + d["Company"] + ")" });
 
         //Insert the x axis
         chart.append("g")
@@ -138,15 +150,24 @@
       });
 
       var getCompanyColor = function(d){
-        switch(d["Company Name"].toUpperCase()) {
+        switch(d["Company"].toUpperCase()) {
           case "ASTRAZENECA" : 
             return '#660033'
             break;
           case "PFIZER" :
             return '#6600CC'
             break;
+          case "GSK" :
+            return '#3300CC'
+            break;
+          case "BI" :
+            return '#1100CC'
+            break;
+          case "CHIESI" :
+            return '#338811'
+            break;
           default:
-            return '#000';
+            return '#ccc';
         }
       }
     </script>
