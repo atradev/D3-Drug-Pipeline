@@ -128,7 +128,7 @@
           });
         //Draw rect  
         bar.append("rect")
-            .attr("y", height/2)
+            .attr("y", height/3)
             .attr("height", function(d) { 
               return _.max([35,_.min([barHeight, height / groupedData[d.Phase].length - yMargin])]); 
             })
@@ -144,21 +144,21 @@
         //Append drug name
         bar.append("text")
             .attr("x", x.rangeBand() / 2)
-            .attr("y", height/2 + 10)
+            .attr("y", height/3 + 10)
             .attr("dy", ".75em")
             .text(function(d) { return d["Drug"] });
 
         //Append drug company
         bar.append("text")
             .attr("x", x.rangeBand() / 2)
-            .attr("y", height/2 + 20)
+            .attr("y", height/3 + 20)
             .attr("dy", ".75em")
             .text(function(d) { return "(" + d["Company"] + ")" });
 
         //Insert the x axis
         chart.append("g")
           .attr("class", "x axis")
-          .attr("transform", "translate(0," + height/2 + ")")
+          .attr("transform", "translate(0," + height/3 + ")")
           .call(xAxis);
 
       });
